@@ -52,7 +52,7 @@
     text-transform:uppercase;
     pointer-events:auto;
   }
-  header.topbar .brand span{ color:var(--accent); }
+  header.topbar .brand span{ color:#ffffff; }
   header.topbar .sub{
     font-size:11px;
     letter-spacing:0.14em;
@@ -93,23 +93,29 @@
     filter: drop-shadow(0 40px 70px rgba(0,0,0,0.85));
   }
 
-  /* spine / gutter crease running down the middle of an open spread */
+  /* spine / gutter shadow — the natural crease where two pages meet in an open spread */
   #book-wrap.spread #book::after{
     content:"";
     position:absolute;
     left:50%;
-    top:0;
-    bottom:0;
-    width:64px;
+    top:1%;
+    bottom:1%;
+    width:36px;
     transform:translateX(-50%);
     background:linear-gradient(to right,
       transparent 0%,
-      rgba(0,0,0,0.16) 38%,
-      rgba(0,0,0,0.32) 50%,
-      rgba(0,0,0,0.16) 62%,
+      rgba(0,0,0,0.22) 46%,
+      rgba(0,0,0,0.30) 50%,
+      rgba(0,0,0,0.22) 54%,
       transparent 100%);
+    mix-blend-mode:multiply;
     pointer-events:none;
-    z-index:6;
+    z-index:4;
+    opacity:1;
+    transition:opacity .18s ease;
+  }
+  #book-wrap.spread.is-flipping #book::after{
+    opacity:0;
   }
 
   .page{
@@ -370,6 +376,12 @@
   }
   pageFlip.on('changeOrientation', updateSpreadClass);
   pageFlip.on('init', updateSpreadClass);
+
+  // Hide the spine shadow while a page is actively curling so it doesn't
+  // appear pasted onto the moving page — only show it on the settled spread.
+  pageFlip.on('changeState', (e) => {
+    bookWrapEl.classList.toggle('is-flipping', e.data === 'flipping' || e.data === 'user_fold');
+  });
 
   const counterEl = document.getElementById('counter');
   const prevBtn = document.getElementById('prevBtn');
