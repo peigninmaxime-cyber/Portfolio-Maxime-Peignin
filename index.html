@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maxime Peignin — Portfolio 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0c0c0c;
+    --paper:#efece4;
+    --paper-dim:#dcd8cc;
+    --accent:#ff5a1f;
+    --line: rgba(239,236,228,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Space Grotesk', sans-serif;
+    overflow:hidden;
+  }
+
+  .stage{
+    position:relative;
+    height:100dvh;
+    width:100vw;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* ambient backdrop texture */
+  .stage::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(255,90,31,0.10), transparent 55%),
+      radial-gradient(ellipse at 50% 100%, rgba(255,255,255,0.04), transparent 60%);
+    pointer-events:none;
+  }
+
+  header.topbar{
+    position:absolute;
+    top:0; left:0; right:0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:22px 32px;
+    z-index:20;
+    pointer-events:none;
+  }
+  header.topbar .brand{
+    font-family:'Archivo Black', sans-serif;
+    font-size:14px;
+    letter-spacing:0.02em;
+    text-transform:uppercase;
+    pointer-events:auto;
+  }
+  header.topbar .brand span{ color:var(--accent); }
+  header.topbar .sub{
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:rgba(239,236,228,0.5);
+    margin-top:2px;
+  }
+  header.topbar .hint{
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:rgba(239,236,228,0.45);
+    text-align:right;
+    pointer-events:auto;
+  }
+
+  #book-wrap{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    height:100%;
+  }
+
+  .book-shadow{
+    position:absolute;
+    width:min(70vw, 640px);
+    height:70%;
+    background:radial-gradient(ellipse at center, rgba(0,0,0,0.55), transparent 70%);
+    filter:blur(10px);
+    top:56%;
+    z-index:0;
+  }
+
+  #book{
+    z-index:2;
+  }
+
+  .page{
+    background:var(--paper);
+    overflow:hidden;
+    position:relative;
+  }
+  .page img{
+    width:100%; height:100%;
+    object-fit:cover;
+    display:block;
+    user-select:none;
+    -webkit-user-drag:none;
+    pointer-events:none;
+  }
+  .page-number{
+    position:absolute;
+    bottom:10px;
+    right:14px;
+    font-size:10px;
+    letter-spacing:0.08em;
+    color:rgba(12,12,12,0.35);
+    font-weight:500;
+    pointer-events:none;
+    z-index:3;
+  }
+
+  .video-page{ cursor:pointer; }
+  .video-page .play-badge{
+    position:absolute;
+    top:16px; left:16px;
+    font-size:9px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    background:var(--accent);
+    color:#0c0c0c;
+    padding:5px 9px;
+    font-weight:700;
+    border-radius:2px;
+    z-index:4;
+    pointer-events:none;
+  }
+  .video-page:hover img{ filter:brightness(1.05); }
+
+  /* controls */
+  .controls{
+    position:absolute;
+    bottom:22px; left:0; right:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+    z-index:20;
+  }
+  .ctrl-btn{
+    background:transparent;
+    border:1px solid rgba(239,236,228,0.3);
+    color:var(--paper);
+    width:42px; height:42px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:all .18s ease;
+  }
+  .ctrl-btn:hover{ border-color:var(--accent); color:var(--accent); }
+  .ctrl-btn:disabled{ opacity:0.25; cursor:default; }
+  .ctrl-btn:disabled:hover{ border-color:rgba(239,236,228,0.3); color:var(--paper); }
+  .ctrl-btn svg{ width:16px; height:16px; }
+
+  .counter{
+    font-size:12px;
+    letter-spacing:0.08em;
+    min-width:64px;
+    text-align:center;
+    color:rgba(239,236,228,0.65);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* modal for video playback */
+  .modal{
+    position:fixed; inset:0;
+    background:rgba(5,5,5,0.92);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:5vw;
+  }
+  .modal.open{ display:flex; }
+  .modal-inner{
+    position:relative;
+    width:100%;
+    max-width:900px;
+  }
+  .modal-inner .frame-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    background:#000;
+    box-shadow:0 30px 90px rgba(0,0,0,0.6);
+  }
+  .modal-inner.vertical .frame-wrap{
+    max-width:420px;
+    aspect-ratio:9/16;
+    margin:0 auto;
+  }
+  .modal-inner iframe{
+    width:100%; height:100%; border:0; display:block;
+  }
+  .modal-close{
+    position:absolute;
+    top:-44px; right:0;
+    background:none;
+    border:1px solid rgba(239,236,228,0.35);
+    color:var(--paper);
+    width:34px; height:34px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:16px;
+    line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .modal-close:hover{ border-color:var(--accent); color:var(--accent); }
+
+  /* mobile */
+  @media (max-width:720px){
+    header.topbar{ padding:16px 18px; }
+    header.topbar .brand{ font-size:11px; }
+    header.topbar .hint{ display:none; }
+    .controls{ bottom:14px; gap:12px; }
+    .ctrl-btn{ width:36px; height:36px; }
+  }
+
+  ::selection{ background:var(--accent); color:#0c0c0c; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <header class="topbar">
+    <div>
+      <div class="brand">Maxime <span>Peignin</span></div>
+      <div class="sub">Portfolio 2026</div>
+    </div>
+    <div class="hint">Clic ou flèches pour tourner les pages</div>
+  </header>
+
+  <div id="book-wrap">
+    <div class="book-shadow"></div>
+    <div id="book"></div>
+  </div>
+
+  <div class="controls">
+    <button class="ctrl-btn" id="prevBtn" aria-label="Page précédente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="counter" id="counter">1 / 20</div>
+    <button class="ctrl-btn" id="nextBtn" aria-label="Page suivante">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="modal" id="videoModal">
+  <div class="modal-inner" id="modalInner">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="frame-wrap">
+      <iframe id="videoFrame" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/page-flip.browser.js"></script>
+<script>
+  // Pages with an embedded video (page number -> {id, vertical})
+  const VIDEO_PAGES = {
+    7:  { id: "a8kx1GvBjr0", vertical: true  }, // short format
+    17: { id: "OP9-NUobd1U", vertical: false },
+    18: { id: "f3t-bNxPFiY", vertical: false }
+  };
+
+  const TOTAL_PAGES = 20;
+  const bookEl = document.getElementById('book');
+
+  function buildPageHTML(n){
+    const num = String(n).padStart(2,'0');
+    const video = VIDEO_PAGES[n];
+    const div = document.createElement('div');
+    div.className = 'page' + (video ? ' video-page' : '');
+    div.dataset.density = (n === 1 || n === TOTAL_PAGES) ? 'hard' : 'soft';
+
+    const img = document.createElement('img');
+    img.src = `pages/page-${num}.jpg`;
+    img.alt = `Page ${n} du portfolio`;
+    img.draggable = false;
+    div.appendChild(img);
+
+    if(video){
+      const badge = document.createElement('div');
+      badge.className = 'play-badge';
+      badge.textContent = 'Vidéo — cliquer pour lire';
+      div.appendChild(badge);
+      div.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openVideo(video.id, video.vertical);
+      });
+    }
+
+    const pn = document.createElement('div');
+    pn.className = 'page-number';
+    pn.textContent = num;
+    div.appendChild(pn);
+
+    return div;
+  }
+
+  for(let i=1;i<=TOTAL_PAGES;i++){
+    bookEl.appendChild(buildPageHTML(i));
+  }
+
+  function computeSize(){
+    const maxW = Math.min(window.innerWidth * 0.42, 480);
+    const maxHAvail = window.innerHeight * 0.78;
+    let w = maxW;
+    let h = w * (1754/1241);
+    if(h > maxHAvail){
+      h = maxHAvail;
+      w = h * (1241/1754);
+    }
+    return { w: Math.round(w), h: Math.round(h) };
+  }
+
+  const size = computeSize();
+
+  const pageFlip = new St.PageFlip(bookEl, {
+    width: size.w,
+    height: size.h,
+    size: 'fixed',
+    minWidth: 240,
+    maxWidth: 600,
+    minHeight: 340,
+    maxHeight: 860,
+    maxShadowOpacity: 0.55,
+    showCover: true,
+    mobileScrollSupport: false,
+    usePortrait: window.innerWidth < 720,
+    flippingTime: 700,
+    useMouseEvents: true,
+  });
+
+  pageFlip.loadFromHTML(document.querySelectorAll('#book .page'));
+
+  const counterEl = document.getElementById('counter');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function updateUI(){
+    const idx = pageFlip.getCurrentPageIndex();
+    counterEl.textContent = `${idx+1} / ${TOTAL_PAGES}`;
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx >= TOTAL_PAGES - 1;
+  }
+
+  pageFlip.on('flip', updateUI);
+  updateUI();
+
+  prevBtn.addEventListener('click', () => pageFlip.flipPrev());
+  nextBtn.addEventListener('click', () => pageFlip.flipNext());
+
+  window.addEventListener('keydown', (e) => {
+    if(e.key === 'ArrowRight') pageFlip.flipNext();
+    if(e.key === 'ArrowLeft') pageFlip.flipPrev();
+  });
+
+  window.addEventListener('resize', () => {
+    // page-flip handles internal responsiveness via 'size: fixed' + CSS scaling of wrapper on most browsers;
+    // for drastic viewport changes a reload keeps things crisp.
+  });
+
+  // ---- Video modal ----
+  const modal = document.getElementById('videoModal');
+  const modalInner = document.getElementById('modalInner');
+  const videoFrame = document.getElementById('videoFrame');
+  const modalClose = document.getElementById('modalClose');
+
+  function openVideo(id, vertical){
+    videoFrame.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+    modalInner.classList.toggle('vertical', !!vertical);
+    modal.classList.add('open');
+  }
+  function closeVideo(){
+    modal.classList.remove('open');
+    videoFrame.src = '';
+  }
+  modalClose.addEventListener('click', closeVideo);
+  modal.addEventListener('click', (e) => { if(e.target === modal) closeVideo(); });
+  window.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeVideo(); });
+</script>
+
+</body>
+</html>
